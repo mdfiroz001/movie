@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Movie App Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Icons & Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS STYLES --- */
+        :root {
+            --primary-grad: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+            --bg-color: #F4F8FB;
+            --white: #ffffff;
+            --text-dark: #2d3436;
+            --text-grey: #636e72;
+            --shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 15px 35px rgba(0, 114, 255, 0.2);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { background-color: #dfe6e9; display: flex; justify-content: center; height: 100vh; height: 100dvh; overflow: hidden; }
+        
+        .app-container { width: 100%; max-width: 480px; height: 100%; background-color: var(--bg-color); position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 50px rgba(0,0,0,0.1); }
+        
+        /* Tabs */
+        .tab-content { display: none; flex: 1; overflow-y: auto; padding-bottom: 140px; scrollbar-width: none; position: relative; z-index: 10; }
+        .tab-content::-webkit-scrollbar { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- SCROLLABLE HEADER BG --- */
+        .scroll-bg-shape { position: absolute; top: 0; left: 0; width: 100%; height: 280px; background: var(--primary-grad); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; z-index: 0; }
+
+        /* --- HEADER WRAPPER --- */
+        .header-wrapper { position: relative; z-index: 100; width: 100%; background: transparent; }
+        .header-content { padding: 20px 25px; color: white; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        
+        /* Notification Bell */
+        .profile-btn { width: 45px; height: 45px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3); }
+        .notif-badge { position: absolute; top: 10px; right: 12px; width: 8px; height: 8px; background: #ff4757; border-radius: 50%; display: none; border: 1px solid white; }
+
+        .search-box { background: white; border-radius: 20px; padding: 12px 20px; display: flex; align-items: center; gap: 10px; color: grey; box-shadow: 0 5px 15px rgba(0,0,0,0.05); cursor: pointer; }
+        .search-box span { font-size: 0.95rem; color: #999; }
+
+        /* Components */
+        .hero-section { position: relative; z-index: 20; margin-top: 10px; padding-left: 25px; white-space: nowrap; overflow-x: auto; scrollbar-width: none; min-height: 200px; }
+        .hero-card { width: 85%; height: 200px; border-radius: 20px; overflow: hidden; position: relative; display: inline-block; margin-right: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); cursor: pointer; background: #ddd; }
+        .hero-img { width: 100%; height: 100%; object-fit: cover; }
+        .hero-overlay { position: absolute; bottom: 0; width: 100%; padding: 15px; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: white; }
+
+        /* Categories */
+        .category-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 25px; scrollbar-width: none; position: relative; z-index: 5; }
+        .cat-pill { padding: 8px 20px; background: white; color: #666; border-radius: 30px; font-size: 0.9rem; white-space: nowrap; box-shadow: var(--shadow-soft); cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
+        .cat-pill.active { background: var(--primary-grad); color: white; box-shadow: 0 5px 15px rgba(0, 114, 255, 0.3); }
+
+        /* Sections */
+        .section-header { padding: 0 25px; display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; position: relative; z-index: 5;}
+        .movie-row { display: flex; overflow-x: auto; padding: 0 25px 20px; gap: 15px; scrollbar-width: none; min-height: 150px; position: relative; z-index: 5; }
+        
+        .poster-card { min-width: 130px; height: 190px; border-radius: 15px; overflow: hidden; position: relative; background: #eee; cursor: pointer; box-shadow: var(--shadow-soft); transition: transform 0.2s; }
+        .poster-card:active { transform: scale(0.95); }
+        .poster-card img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* Bottom Nav */
+        .bottom-nav { position: absolute; bottom: 0; width: 100%; height: 80px; background: rgba(255,255,255,0.95); display: flex; justify-content: space-around; align-items: center; border-radius: 30px 30px 0 0; z-index: 150; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); backdrop-filter: blur(10px); }
+        .nav-item { font-size: 1.4rem; color: #b2bec3; cursor: pointer; transition: 0.3s; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; }
+        .nav-item.active { color: #0072ff; transform: translateY(-5px); }
+
+        /* Overlays (Details / Profile / Search) */
+        .overlay-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 200; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-y: auto; padding-bottom: 50px; }
+        .overlay-screen.open { transform: translateY(0); }
+        
+        /* DETAILS SCREEN Z-INDEX FIXED (Higher than Search) */
+        #details-screen {
+            z-index: 300; 
+        }
+
+        .back-btn { position: absolute; top: 30px; left: 25px; width: 40px; height: 40px; background: rgba(255,255,255,0.3); backdrop-filter: blur(5px); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; z-index: 210; }
+        .back-btn.dark { background: white; color: #333; box-shadow: var(--shadow-soft); }
+
+        /* Details Content */
+        .detail-cover { height: 350px; width: 100%; position: relative; } 
+        .detail-img { width: 100%; height: 100%; object-fit: cover; }
+        .detail-content { background: var(--bg-color); margin-top: -40px; border-radius: 40px 40px 0 0; padding: 30px 25px 100px; position: relative; min-height: 500px; }
+        .play-btn { width: 100%; padding: 18px; border-radius: 20px; background: var(--primary-grad); color: white; border: none; font-size: 1.1rem; font-weight: 600; margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 10px 20px rgba(0, 114, 255, 0.3); }
+        .action-row { display: flex; justify-content: space-around; margin-bottom: 25px; }
+        .action-icon { text-align: center; color: var(--text-grey); font-size: 0.8rem; cursor: pointer; }
+        .action-icon i { width: 50px; height: 50px; background: var(--white); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #0072ff; box-shadow: var(--shadow-soft); margin-bottom: 5px; transition: 0.2s; }
+        .action-icon.liked i { background: #ff4757; color: white; }
+
+        /* Notification List */
+        .notification-item { background: white; padding: 15px; border-radius: 15px; margin-bottom: 10px; box-shadow: var(--shadow-soft); border-left: 4px solid #0072ff; cursor: pointer; transition: transform 0.2s, background 0.2s; }
+        .notification-item:active { transform: scale(0.98); background: #f0f8ff; }
+        .notif-msg-preview { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; color: #636e72; font-size: 0.9rem; line-height: 1.5; margin-top: 5px; }
+        .notif-date { font-size: 0.75rem; color: #999; display: block; margin-top: 8px; text-align: right; }
+
+        /* Profile */
+        .profile-header-wrap { padding: 40px 25px 30px; background: white; border-radius: 0 0 30px 30px; text-align: center; box-shadow: var(--shadow-soft); }
+        .menu-list { padding: 25px; padding-bottom: 50px; }
+        .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: white; border-radius: 15px; margin-bottom: 15px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.03); transition: 0.2s; }
+        .menu-item:active { transform: scale(0.98); }
+        .menu-left { display: flex; align-items: center; gap: 15px; font-weight: 500; color: var(--text-dark); }
+        .menu-icon { width: 35px; height: 35px; border-radius: 10px; background: rgba(0, 114, 255, 0.1); color: #0072ff; display: flex; align-items: center; justify-content: center; }
+
+        /* Profile Sub Page Content */
+        .sub-page-content { padding: 90px 25px 100px; }
+        .sub-page-title { font-size: 1.8rem; color: var(--text-dark); margin-bottom: 20px; }
+
+        /* Search Page specific styles */
+        .search-header-wrap { padding: 25px; display: flex; gap: 15px; align-items: center; background: white; box-shadow: var(--shadow-soft); position: sticky; top: 0; z-index: 10; }
+        .real-search-input { border: none; outline: none; width: 100%; font-size: 1.1rem; color: var(--text-dark); background: transparent; }
+        .search-results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 20px 25px; }
+
+        /* Updated Video Player Styles */
+        #video-player-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 2000; display: none; align-items: center; justify-content: center; }
+        #video-player-overlay.active { display: flex; }
+        .video-wrapper { width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; }
+        .close-video { position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer; z-index: 2001; background: rgba(0,0,0,0.5); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        
+        iframe, video { width: 100%; height: 100%; border: none; max-height: 100vh; }
+        
+        /* Favorites Grid */
+        .fav-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 20px; }
+        
+        /* Shimmer Loading */
+        .skeleton { background: #eee; background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%); background-size: 200% 100%; animation: 1.5s shine linear infinite; border-radius: 15px; }
+        @keyframes shine { to { background-position-x: -200%; } }
+
+        /* Custom Toast */
+        .custom-toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(50px); background: rgba(33, 33, 33, 0.95); color: white; padding: 12px 25px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 12px; opacity: 0; pointer-events: none; transition: all 0.4s; z-index: 3000; font-size: 0.9rem; white-space: nowrap; }
+        .custom-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .custom-toast i { color: #00c6ff; font-size: 1.1rem; }
+        .custom-toast.error i { color: #ff4757; }
+
+        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- CUSTOM TOAST -->
+    <div id="custom-toast" class="custom-toast">
+        <i id="toast-icon" class="fa-solid fa-check-circle"></i>
+        <span id="toast-msg">Message</span>
+    </div>
+
+    <!-- ================= PAGE 1: HOME ================= -->
+    <div id="home-page" class="tab-content active">
+        <div class="scroll-bg-shape"></div>
+        <div class="header-wrapper">
+            <div class="header-content">
+                <div class="top-nav">
+                    <div class="user-info">
+                        <p>Welcome Back,</p>
+                        <h3 id="user-name">Guest User</h3>
+                    </div>
+                    <div class="profile-btn" onclick="openProfileSubPage('notifications')">
+                        <i class="fa-solid fa-bell"></i>
+                        <div class="notif-badge" id="notif-badge"></div>
+                    </div>
+                </div>
+                
+                <!-- CLICKABLE SEARCH BOX (OPENS NEW PAGE) -->
+                <div class="search-box" onclick="openSearchPage()">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>Search movies, series...</span>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="hero-section" id="hero-container">
+            <div class="hero-card skeleton" style="width:85%; height:200px;"></div>
+        </div>
+        
+        <div class="category-scroll" id="category-container"></div>
+
+        <!-- ***** POPULAR SECTION ***** -->
+        <div class="section-header">
+            <h3 style="display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-fire" style="color:#ff4757"></i> Popular
+            </h3>
+        </div>
+        <div class="movie-row" id="popular-container">
+             <div class="poster-card skeleton"></div>
+             <div class="poster-card skeleton"></div>
+        </div>
+        <!-- ***** END POPULAR SECTION ***** -->
+
+        <div class="section-header">
+            <h3>Trending Now</h3>
+            <span style="font-size: 0.8rem; color: #0072ff; font-weight: 600; cursor:pointer" onclick="goToExplore()">See All</span>
+        </div>
+        <div class="movie-row" id="trending-container">
+             <div class="poster-card skeleton"></div>
+             <div class="poster-card skeleton"></div>
+        </div>
+        <div style="height:20px"></div>
+    </div>
+
+    <!-- ================= PAGE 2: EXPLORE ================= -->
+    <div id="explore-page" class="tab-content">
+        <div class="scroll-bg-shape" style="height:120px;"></div>
+        <div style="padding: 20px 25px 20px; position:relative; z-index:5;">
+            <h2 style="margin-bottom:20px; color:white;">Explore Library</h2>
+            <div class="movie-row" id="explore-container" style="flex-wrap: wrap; justify-content: center; gap: 15px; padding: 0;"></div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 3: FAVORITES ================= -->
+    <div id="favorites-page" class="tab-content">
+        <div class="scroll-bg-shape" style="height:140px; border-radius: 0 0 30px 30px;"></div>
+        
+        <div style="padding: 35px 25px 10px; position:relative; z-index:5;">
+            
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom: 25px; color:white;">
+                <i class="fa-solid fa-heart" style="font-size: 1.8rem; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2));"></i>
+                <div>
+                    <h1 style="font-size: 1.4rem; font-weight: 600; line-height:1.2;">My List</h1>
+                    <p style="font-size: 0.8rem; opacity:0.9;">Your collections</p>
+                </div>
+            </div>
+            
+            <div id="fav-container" class="fav-grid" style="padding:0;"></div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 4: PROFILE ================= -->
+    <div id="profile-page" class="tab-content">
+        <div style="height: 50px;"></div> 
+        <div class="profile-header-wrap" style="position:relative; z-index:20;">
+            <img src="https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff" id="p-img" style="width:100px; height:100px; border-radius:50%; margin-bottom:10px; border:4px solid white; box-shadow:0 5px 15px rgba(0,0,0,0.1);">
+            <div style="background:#FFD700; color:#b8860b; padding:2px 10px; border-radius:10px; display:inline-block; font-size:0.7rem; font-weight:bold; margin-bottom:5px;">PREMIUM</div>
+            <h2 id="p-name">Guest</h2>
+            <p id="p-email" style="color:#666; font-size:0.9rem;">Not Logged In</p>
+        </div>
+        
+        <div class="menu-list">
+            <div class="menu-item" onclick="openProfileSubPage('account')">
+                <div class="menu-left"><div class="menu-icon"><i class="fa-regular fa-user"></i></div> My Account</div>
+                <i class="fa-solid fa-chevron-right" style="color:#ccc; font-size:0.8rem;"></i>
+            </div>
+            <div class="menu-item" onclick="openProfileSubPage('subscription')">
+                <div class="menu-left"><div class="menu-icon"><i class="fa-solid fa-crown"></i></div> Subscription</div>
+                <i class="fa-solid fa-chevron-right" style="color:#ccc; font-size:0.8rem;"></i>
+            </div>
+            <div class="menu-item" onclick="openProfileSubPage('downloads')">
+                <div class="menu-left"><div class="menu-icon"><i class="fa-solid fa-download"></i></div> Downloads</div>
+                <i class="fa-solid fa-chevron-right" style="color:#ccc; font-size:0.8rem;"></i>
+            </div>
+            <div class="menu-item" onclick="openProfileSubPage('notifications')">
+                <div class="menu-left"><div class="menu-icon"><i class="fa-regular fa-bell"></i></div> Notifications</div>
+                <i class="fa-solid fa-chevron-right" style="color:#ccc; font-size:0.8rem;"></i>
+            </div>
+            <div class="menu-item" id="logout-btn">
+                <div class="menu-left" style="color:#ff4757;"><div class="menu-icon" style="background:rgba(255,71,87,0.1); color:#ff4757;"><i class="fa-solid fa-arrow-right-from-bracket"></i></div> Log Out</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+        <div class="nav-item active"><i class="fa-solid fa-house"></i></div>
+        <div class="nav-item"><i class="fa-solid fa-compass"></i></div>
+        <div class="nav-item"><i class="fa-solid fa-heart"></i></div>
+        <div class="nav-item"><i class="fa-solid fa-user"></i></div>
+    </div>
+
+    <!-- === DETAILS MODAL === -->
+    <div id="details-screen" class="overlay-screen">
+        <div class="back-btn" onclick="closeDetails()"><i class="fa-solid fa-arrow-left"></i></div>
+        <div class="detail-cover"><img id="d-img" class="detail-img"></div>
+        <div class="detail-content">
+            <h1 id="d-title" style="margin-bottom:5px; font-size:1.8rem;">Title</h1>
+            <p id="d-meta" style="color:#666; margin-bottom:20px; font-size:0.9rem;">Genre</p>
+            <button class="play-btn" id="d-play-btn"><i class="fa-solid fa-play"></i> Watch Now</button>
+            <div class="action-row">
+                <div class="action-icon" id="fav-btn" onclick="toggleFavorite()"><i class="fa-solid fa-plus"></i><span>My List</span></div>
+                <div class="action-icon" onclick="showToast('Rating submitted!', 'fa-star')"><i class="fa-regular fa-star"></i><span>Rate</span></div>
+                <div class="action-icon" onclick="copyToClipboard(window.location.href)"><i class="fa-solid fa-share-nodes"></i><span>Share</span></div>
+            </div>
+            <h3 style="margin-bottom:10px;">Storyline</h3>
+            <p id="d-desc" style="color:#666; line-height:1.6; font-size:0.95rem;">Description...</p>
+        </div>
+    </div>
+
+    <!-- === NEW SEARCH PAGE (FULL SCREEN OVERLAY) === -->
+    <div id="search-screen" class="overlay-screen" style="background:white;">
+        <div class="search-header-wrap">
+            <div class="menu-icon" onclick="closeSearchPage()" style="cursor:pointer;"><i class="fa-solid fa-arrow-left"></i></div>
+            <input type="text" id="real-search-input" class="real-search-input" placeholder="Type here to search...">
+            <i class="fa-solid fa-magnifying-glass" style="color:#ccc;"></i>
+        </div>
+        <div id="search-results-container" class="search-results-grid">
+            <!-- Results will appear here -->
+        </div>
+    </div>
+
+    <!-- === PROFILE SUB-PAGES MODAL === -->
+    <div id="profile-sub-screen" class="overlay-screen" style="background:var(--bg-color)">
+        <div class="back-btn dark" onclick="closeProfileSubPage()"><i class="fa-solid fa-arrow-left"></i></div>
+        <div class="sub-page-content">
+            <h2 id="sub-page-title" class="sub-page-title">Title</h2>
+            <div id="sub-page-body">Content...</div>
+        </div>
+    </div>
+
+    <!-- === NOTIFICATION READER MODAL === -->
+    <div id="notif-reader-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div style="background: white; width: 85%; max-width: 400px; border-radius: 20px; padding: 25px; position: relative; animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <div onclick="closeNotifReader()" style="position: absolute; top: 15px; right: 15px; width: 30px; height: 30px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #333;">
+                <i class="fa-solid fa-xmark"></i>
+            </div>
+            <div style="text-align: center; margin-bottom: 15px;">
+                <i class="fa-regular fa-bell" style="font-size: 2rem; color: #0072ff; background: rgba(0, 114, 255, 0.1); width: 60px; height: 60px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%;"></i>
+            </div>
+            <h3 id="nr-title" style="color: #2d3436; margin-bottom: 5px; font-size: 1.2rem; text-align: center;">Notification Title</h3>
+            <span id="nr-date" style="display: block; color: #999; font-size: 0.8rem; text-align: center; margin-bottom: 20px;">Date</span>
+            <div style="max-height: 300px; overflow-y: auto; background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee;">
+                <p id="nr-msg" style="color: #636e72; font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap;">Message content...</p>
+            </div>
+            <button onclick="closeNotifReader()" style="width: 100%; padding: 12px; margin-top: 20px; background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer;">Close</button>
+        </div>
+    </div>
+
+    <!-- === VIDEO PLAYER MODAL === -->
+    <div id="video-player-overlay">
+        <div class="close-video" onclick="closeVideoPlayer()">&times;</div>
+        <!-- Video Wrapper খালি রাখা হয়েছে, JS দিয়ে এখানে প্লেয়ার বসানো হবে -->
+        <div class="video-wrapper"></div>
+    </div>
+
+</div>
+
+<!-- UI LOGIC -->
+<script>
+    // --- Toast Function ---
+    let toastTimeout;
+    window.showToast = (msg, iconClass = 'fa-check-circle', isError = false) => {
+        const toast = document.getElementById('custom-toast');
+        document.getElementById('toast-msg').innerText = msg;
+        document.getElementById('toast-icon').className = `fa-solid ${iconClass}`;
+        if(isError) toast.classList.add('error'); else toast.classList.remove('error');
+        setTimeout(() => toast.classList.add('show'), 10);
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+    };
+
+    window.copyToClipboard = (text) => {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => showToast('Link Copied!', 'fa-link')).catch(err => fallbackCopyText(text));
+        } else fallbackCopyText(text);
+    };
+    function fallbackCopyText(text) {
+        try {
+            const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px";
+            document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+            showToast('Link Copied!', 'fa-link');
+        } catch (err) { showToast('Unable to copy', 'fa-circle-xmark', true); }
+    }
+
+    // --- Navigation ---
+    const navItems = document.querySelectorAll('.nav-item');
+    const tabs = document.querySelectorAll('.tab-content');
+    navItems.forEach((item, index) => {
+        item.addEventListener('click', () => {
+            navItems.forEach(n => n.classList.remove('active'));
+            item.classList.add('active');
+            tabs.forEach(t => t.classList.remove('active'));
+            tabs[index].classList.add('active');
+            if(index === 2) loadFavorites();
+        });
+    });
+    function goToExplore() { navItems[1].click(); }
+
+    // --- Details Modal ---
+    let currentMovieData = {};
+    window.openDetails = (title, img, genre, desc, stream) => {
+        currentMovieData = { title, img, genre, desc, stream };
+        document.getElementById('d-title').innerText = title;
+        document.getElementById('d-img').src = img;
+        document.getElementById('d-meta').innerText = genre;
+        document.getElementById('d-desc').innerText = desc;
+        const btn = document.getElementById('d-play-btn');
+        
+        if(stream && stream !== 'undefined' && stream !== '') {
+            btn.innerHTML = '<i class="fa-solid fa-play"></i> Watch Now';
+            btn.onclick = () => openVideoPlayer(stream);
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
+        } else {
+            btn.innerHTML = '<i class="fa-solid fa-ban"></i> Unavailable';
+            btn.onclick = () => showToast("Stream not available", "fa-circle-xmark", true);
+            btn.style.opacity = '0.6';
+        }
+        
+        checkFavoriteStatus(title);
+        document.getElementById('details-screen').classList.add('open');
+    };
+    window.closeDetails = () => document.getElementById('details-screen').classList.remove('open');
+
+    // --- Search Page Logic ---
+    window.openSearchPage = () => {
+        document.getElementById('search-screen').classList.add('open');
+        setTimeout(() => document.getElementById('real-search-input').focus(), 300);
+    };
+    window.closeSearchPage = () => {
+        document.getElementById('search-screen').classList.remove('open');
+        document.getElementById('real-search-input').value = "";
+        document.getElementById('search-results-container').innerHTML = "";
+    };
+
+    // --- UPDATED VIDEO PLAYER LOGIC ---
+    window.openVideoPlayer = (url) => {
+        const wrapper = document.querySelector('.video-wrapper');
+        let finalUrl = url;
+        let isNative = false;
+
+        // Check for MP4/MKV/WebM (Direct Files)
+        if (url.match(/\.(mp4|mkv|webm)$/i)) {
+            isNative = true;
+        } 
+        // YouTube Auto Convert (Watch -> Embed)
+        else if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
+            const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
+            finalUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0`;
+        }
+
+        if (isNative) {
+            wrapper.innerHTML = `
+                <video controls autoplay name="media" style="width:100%; height:100%;">
+                    <source src="${finalUrl}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            `;
+        } else {
+            wrapper.innerHTML = `
+                <iframe 
+                    src="${finalUrl}" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen
+                    frameborder="0">
+                </iframe>
+            `;
+        }
+
+        document.getElementById('video-player-overlay').classList.add('active');
+    };
+
+    window.closeVideoPlayer = () => {
+        document.querySelector('.video-wrapper').innerHTML = ""; // Clear content to stop audio
+        document.getElementById('video-player-overlay').classList.remove('active');
+    };
+
+    // --- Favorites ---
+    function getFavorites() { return JSON.parse(localStorage.getItem('myList')) || []; }
+    function checkFavoriteStatus(title) {
+        const favs = getFavorites();
+        const btn = document.getElementById('fav-btn');
+        const isFav = favs.some(m => m.title === title);
+        if(isFav) { btn.classList.add('liked'); btn.innerHTML = '<i class="fa-solid fa-check"></i><span>Added</span>'; }
+        else { btn.classList.remove('liked'); btn.innerHTML = '<i class="fa-solid fa-plus"></i><span>My List</span>'; }
+    }
+    window.toggleFavorite = () => {
+        let favs = getFavorites();
+        const index = favs.findIndex(m => m.title === currentMovieData.title);
+        if(index === -1) { favs.push(currentMovieData); showToast("Added to My List", "fa-heart"); }
+        else { favs.splice(index, 1); showToast("Removed from My List", "fa-trash-can"); }
+        localStorage.setItem('myList', JSON.stringify(favs));
+        checkFavoriteStatus(currentMovieData.title);
+        loadFavorites();
+    };
+    function loadFavorites() {
+        const container = document.getElementById('fav-container');
+        const favs = getFavorites();
+        if(favs.length === 0) { container.innerHTML = "<p style='grid-column: span 3; color:#ccc; text-align:center; padding-top:20px;'>No favorites yet.</p>"; return; }
+        let html = "";
+        favs.forEach(m => {
+             const safeDesc = m.desc.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+             const safeTitle = m.title.replace(/'/g, "\\'");
+             html += `<div class="poster-card" onclick="openDetails('${safeTitle}', '${m.img}', '${m.genre}', '${safeDesc}', '${m.stream}')"><img src="${m.img}"></div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    // --- Profile & Sub-Pages ---
+    const subPageData = {
+        'account': { title: 'My Account', html: '<div style="background:white; padding:20px; border-radius:15px;"><p><strong>Name:</strong> <span id="acc-name">User</span></p><p><strong>Email:</strong> <span id="acc-email">user@mail.com</span></p><p>Member Since: 2024</p></div>' },
+        'subscription': { title: 'Subscription', html: '<div style="background:white; padding:20px; border-radius:15px; text-align:center;"><i class="fa-solid fa-crown" style="font-size:3rem; color:#FFD700; margin-bottom:15px;"></i><h3>Premium Plan</h3><p style="color:green; font-weight:bold;">Active</p><p style="color:#999; font-size:0.8rem;">Renews on Dec 31, 2025</p></div>' },
+        'downloads': { title: 'Downloads', html: '<div style="text-align:center; margin-top:50px; color:#999;"><i class="fa-solid fa-folder-open" style="font-size:3rem; margin-bottom:15px;"></i><p>No movies downloaded yet.</p></div>' },
+        'notifications': { title: 'Notifications', html: '<div id="notif-list-container">Loading...</div>' }
+    };
+    window.openProfileSubPage = (key) => {
+        const data = subPageData[key];
+        document.getElementById('sub-page-title').innerText = data.title;
+        document.getElementById('sub-page-body').innerHTML = data.html;
+        document.getElementById('profile-sub-screen').classList.add('open');
+        if(key === 'notifications') { loadNotificationsInSubPage(); document.getElementById('notif-badge').style.display = 'none'; }
+        if(key === 'account') {
+            setTimeout(() => {
+                if(document.getElementById('acc-name')) document.getElementById('acc-name').innerText = document.getElementById('p-name').innerText;
+                if(document.getElementById('acc-email')) document.getElementById('acc-email').innerText = document.getElementById('p-email').innerText;
+            }, 100);
+        }
+    };
+    window.closeProfileSubPage = () => document.getElementById('profile-sub-screen').classList.remove('open');
+    window.openNotifReader = (title, msg, date) => {
+        document.getElementById('nr-title').innerText = title;
+        document.getElementById('nr-msg').innerText = msg;
+        document.getElementById('nr-date').innerText = date;
+        document.getElementById('notif-reader-modal').style.display = 'flex';
+    };
+    window.closeNotifReader = () => document.getElementById('notif-reader-modal').style.display = 'none';
+
+</script>
+
+<!-- FIREBASE LOGIC -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_BUCKET.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID",
+    databaseURL: "https://YOUR_DB.firebaseio.com"
+  };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    let allMovies = [];
+
+    onAuthStateChanged(auth, user => {
+        if(user) {
+            document.getElementById('user-name').innerText = user.displayName || "User";
+            document.getElementById('p-name').innerText = user.displayName || "User";
+            document.getElementById('p-email').innerText = user.email;
+            if(user.photoURL) document.getElementById('p-img').src = user.photoURL;
+        }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        signOut(auth).then(() => showToast("Logged Out Successfully", "fa-right-from-bracket"));
+    });
+
+    // 1. Load Categories
+    async function loadCategories() {
+        const container = document.getElementById('category-container');
+        try {
+            const q = await getDocs(collection(db, "categories"));
+            let html = `<div class="cat-pill active" onclick="filterMovies('All', this)">All</div>`;
+            q.forEach(doc => html += `<div class="cat-pill" onclick="filterMovies('${doc.data().name}', this)">${doc.data().name}</div>`);
+            container.innerHTML = html;
+        } catch(e) { console.error(e); }
+    }
+
+    // 2. Fetch Movies & Populate ALL Sections
+    async function fetchMovies() {
+        try {
+            const q = await getDocs(collection(db, "movies"));
+            allMovies = [];
+            q.forEach(doc => allMovies.push(doc.data()));
+            renderMovies(allMovies);
+        } catch(e) { console.error(e); }
+    }
+
+    // Search Logic
+    document.getElementById('real-search-input').addEventListener('keyup', (e) => {
+        const term = e.target.value.toLowerCase();
+        const resultsDiv = document.getElementById('search-results-container');
+        
+        if(term.length === 0) {
+            resultsDiv.innerHTML = "";
+            return;
+        }
+
+        const filtered = allMovies.filter(m => m.title.toLowerCase().includes(term));
+        
+        if(filtered.length === 0) {
+            resultsDiv.innerHTML = "<p style='grid-column: span 3; color:#999; text-align:center;'>No results found.</p>";
+            return;
+        }
+
+        let html = '';
+        filtered.forEach(m => {
+            const safeDesc = (m.description||"").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safeTitle = m.title.replace(/'/g, "\\'");
+            html += `<div class="poster-card" onclick="openDetails('${safeTitle}', '${m.posterUrl}', '${m.genre}', '${safeDesc}', '${m.streamUrl}')"><img src="${m.posterUrl}"></div>`;
+        });
+        resultsDiv.innerHTML = html;
+    });
+
+    window.filterMovies = (category, element) => {
+        document.querySelectorAll('.cat-pill').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+        renderMovies(category === 'All' ? allMovies : allMovies.filter(m => m.genre === category));
+    };
+
+    function renderMovies(movies) {
+        const heroDiv = document.getElementById('hero-container');
+        const popularDiv = document.getElementById('popular-container');
+        const trendDiv = document.getElementById('trending-container');
+        const exploreDiv = document.getElementById('explore-container');
+        
+        let heroHTML = '', popularHTML = '', trendHTML = '', exploreHTML = '';
+        
+        if(movies.length === 0) { exploreDiv.innerHTML = "<p style='color:#ccc; padding:20px;'>No matches.</p>"; return; }
+
+        movies.forEach(data => {
+            const title = data.title;
+            const genre = data.genre;
+            const poster = data.posterUrl || "https://via.placeholder.com/200";
+            const cover = data.coverUrl || poster;
+            const desc = (data.description || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const stream = data.streamUrl || ""; 
+            const clickAttr = `onclick="openDetails('${title.replace(/'/g,"\\'")}','${poster}','${genre}','${desc}', '${stream}')"`;
+
+            if(data.isHero) heroHTML += `<div class="hero-card" ${clickAttr}><img src="${cover}" class="hero-img"><div class="hero-overlay"><h3>${title}</h3><p>${genre}</p></div></div>`;
+            
+            const card = `<div class="poster-card" ${clickAttr}><img src="${poster}"></div>`;
+            
+            if(data.isTrending) trendHTML += card;
+            if(data.isPopular) popularHTML += card;
+
+            exploreHTML += card;
+        });
+
+        if(heroHTML) heroDiv.innerHTML = heroHTML;
+        if(trendHTML) trendDiv.innerHTML = trendHTML;
+        
+        if(popularHTML) popularDiv.innerHTML = popularHTML; 
+        else popularDiv.innerHTML = "<p style='color:#999; padding:0 10px; font-size:0.9rem'>No popular items.</p>";
+
+        exploreDiv.innerHTML = exploreHTML;
+    }
+
+    // 3. Notifications Logic
+    window.loadNotificationsInSubPage = async () => {
+        const div = document.getElementById('notif-list-container');
+        if(!div) return;
+        div.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+        try {
+            const q = await getDocs(query(collection(db, "notifications"), orderBy("date", "desc")));
+            if(q.empty) { div.innerHTML = "<div style='text-align:center; margin-top:50px; color:#999;'><p>No notifications.</p></div>"; return; }
+            let html = '';
+            q.forEach(doc => {
+                const d = doc.data();
+                const safeTitle = (d.title || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const safeMsg = (d.message || "").replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+                let dateStr = "Recent";
+                if(d.date) { const dateObj = d.date.toDate ? d.date.toDate() : new Date(d.date); dateStr = dateObj.toLocaleDateString(); }
+                html += `<div class="notification-item" onclick="openNotifReader('${safeTitle}', '${safeMsg}', '${dateStr}')"><div style="display:flex; justify-content:space-between; margin-bottom:5px;"><h4 style="color:#2d3436; font-size:1rem;">${d.title}</h4><i class="fa-solid fa-chevron-right" style="font-size:0.7rem; color:#ccc;"></i></div><p class="notif-msg-preview">${d.message}</p><span class="notif-date">${dateStr}</span></div>`;
+            });
+            div.innerHTML = html;
+        } catch(e) { console.error(e); div.innerHTML = "<p>Failed to load.</p>"; }
+    };
+    async function checkNotifications() { try { const q = await getDocs(collection(db, "notifications")); if(!q.empty) document.getElementById('notif-badge').style.display = 'block'; } catch(e){} }
+
+    // Init
+    loadCategories();
+    fetchMovies();
+    checkNotifications();
+    loadFavorites();
+
+</script>
+</body>
+</html>

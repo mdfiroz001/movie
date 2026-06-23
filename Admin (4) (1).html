@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StreamAdmin Pro - Updated</title>
+    
+    <!-- Icons & Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- USER APP THEME MATCHING --- */
+        :root {
+            --primary-grad: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+            --sidebar-bg: #ffffff;
+            --bg-color: #F4F8FB;
+            --text-dark: #2d3436;
+            --text-grey: #636e72;
+            --shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.05);
+            --danger: #ff4757;
+            --success: #2ed573;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg-color); display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); }
+
+        /* --- SIDEBAR (Updated Look) --- */
+        .sidebar {
+            width: 260px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            box-shadow: 5px 0 30px rgba(0,0,0,0.03);
+            position: relative;
+        }
+        
+        .logo { 
+            font-size: 1.5rem; 
+            font-weight: 700; 
+            margin-bottom: 40px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            background: var(--primary-grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-link {
+            padding: 12px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.95rem;
+            color: var(--text-grey);
+            transition: 0.3s;
+            font-weight: 500;
+        }
+        .nav-link:hover { background: #f0f8ff; color: #0072ff; }
+        .nav-link.active { background: var(--primary-grad); color: white; box-shadow: 0 5px 15px rgba(0, 114, 255, 0.3); }
+        .nav-link i { width: 20px; text-align: center; }
+
+        /* --- MAIN CONTENT --- */
+        .main-content { flex: 1; display: flex; flex-direction: column; height: 100%; position: relative; }
+        
+        /* Header */
+        .header {
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 900;
+        }
+        .header h2 { font-size: 1.4rem; color: var(--text-dark); font-weight: 600; }
+        .mobile-toggle { display: none; font-size: 1.4rem; cursor: pointer; color: var(--text-dark); margin-right: 15px; }
+        
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            width: 300px;
+            box-shadow: var(--shadow-soft);
+        }
+        .search-bar input { border: none; background: transparent; outline: none; margin-left: 10px; width: 100%; color: var(--text-dark); }
+
+        /* Buttons */
+        .btn { padding: 10px 20px; border-radius: 30px; border: none; cursor: pointer; font-weight: 500; color: white; transition: 0.2s; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .btn-primary { background: var(--primary-grad); box-shadow: 0 5px 15px rgba(0, 114, 255, 0.3); }
+        .btn-primary:active { transform: scale(0.96); }
+        .btn-danger { background: var(--danger); box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3); }
+
+        /* Scrollable Area */
+        .content-scroll { padding: 25px; overflow-y: auto; height: 100%; padding-bottom: 100px; }
+
+        /* Dashboard Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .stat-card { background: white; padding: 20px; border-radius: 20px; box-shadow: var(--shadow-soft); display: flex; align-items: center; gap: 15px; border: 1px solid #f0f0f0; }
+        .stat-icon { width: 50px; height: 50px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; flex-shrink: 0; box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+        .stat-info h3 { font-size: 1.6rem; color: var(--text-dark); margin-bottom: -5px; }
+        .stat-info p { color: var(--text-grey); font-size: 0.85rem; }
+
+        /* Grid Layouts */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
+        
+        .admin-card { background: white; border-radius: 15px; overflow: hidden; box-shadow: var(--shadow-soft); transition: 0.3s; position: relative; border: 1px solid #f5f5f5; }
+        .admin-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); }
+        .admin-card img { width: 100%; height: 230px; object-fit: cover; }
+        
+        .card-body { padding: 12px; }
+        .card-body h4 { font-size: 0.9rem; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-dark); font-weight: 600; }
+        
+        .card-badges { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+        .badge { padding: 3px 8px; border-radius: 20px; color: white; font-size: 0.65rem; font-weight: 500; }
+        .badge-hero { background: #6c5ce7; }
+        .badge-trend { background: #fab1a0; color: #d63031; }
+        .badge-pop { background: #ff4757; } /* For Popular */
+
+        .card-actions { display: flex; gap: 8px; }
+        .action-btn { flex: 1; padding: 8px; border-radius: 10px; border: none; cursor: pointer; color: white; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .edit-btn { background: #00b894; }
+        .del-btn { background: var(--danger); }
+
+        /* List Rows (Categories/Notifs) */
+        .list-row { background: white; padding: 15px 20px; border-radius: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-soft); border: 1px solid #f5f5f5; }
+
+        /* Modals */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal.active { display: flex; animation: fadeIn 0.2s; }
+        .modal-content { background: white; width: 92%; max-width: 480px; padding: 30px; border-radius: 25px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+        .modal-content h3 { color: var(--text-dark); margin-bottom: 20px; font-size: 1.3rem; }
+
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: var(--text-grey); }
+        .form-control { width: 100%; padding: 12px 15px; border: 1px solid #eee; border-radius: 12px; outline: none; background: #F9F9F9; transition: 0.3s; font-size: 0.95rem; font-family: 'Poppins', sans-serif; }
+        .form-control:focus { border-color: #0072ff; background: white; box-shadow: 0 0 0 3px rgba(0, 114, 255, 0.1); }
+
+        /* Toggle Checkboxes */
+        .toggle-group { display: flex; gap: 15px; flex-wrap: wrap; background: #f8f9fa; padding: 15px; border-radius: 15px; border: 1px solid #eee; }
+        .toggle-label { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; color: var(--text-dark); }
+        input[type="checkbox"] { accent-color: #0072ff; width: 16px; height: 16px; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #2d3436; color: white; padding: 12px 30px; border-radius: 50px; z-index: 3000; display: flex; align-items: center; gap: 10px; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        /* View Management */
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -100%; height: 100%; width: 270px; }
+            .sidebar.active { left: 0; box-shadow: 50px 0 100px rgba(0,0,0,0.1); }
+            .mobile-toggle { display: block; }
+            .header { padding: 15px 20px; }
+            .search-bar { display: none; } 
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 15px; flex-direction: column; text-align: center; gap: 8px; }
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .admin-card img { height: 200px; }
+        }
+        
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); z-index: 950; display: none; backdrop-filter: blur(2px); }
+        .overlay.active { display: block; }
+    </style>
+</head>
+<body>
+
+    <!-- Mobile Overlay -->
+    <div class="overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fa-solid fa-play-circle" style="color:#0072ff"></i> Admin Pro
+        </div>
+        <div class="nav-link active" onclick="switchView('dashboard')">
+            <i class="fa-solid fa-chart-pie"></i> Dashboard
+        </div>
+        <div class="nav-link" onclick="switchView('movies')">
+            <i class="fa-solid fa-clapperboard"></i> Movies
+        </div>
+        <div class="nav-link" onclick="switchView('channels')">
+            <i class="fa-solid fa-tower-broadcast"></i> Channels
+        </div>
+        <div class="nav-link" onclick="switchView('categories')">
+            <i class="fa-solid fa-layer-group"></i> Categories
+        </div>
+        <div class="nav-link" onclick="switchView('notifications')">
+            <i class="fa-solid fa-bell"></i> Notifications
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <div style="display: flex; align-items: center;">
+                <i class="fa-solid fa-bars mobile-toggle" onclick="toggleSidebar()"></i>
+                <h2 id="page-title">Dashboard</h2>
+            </div>
+
+            <div class="search-bar" id="global-search" style="display:none;">
+                <i class="fa-solid fa-magnifying-glass" style="color:#999"></i>
+                <input type="text" id="movie-search" placeholder="Search content...">
+            </div>
+
+            <button class="btn btn-primary" id="add-btn" onclick="openModal()" style="display:none;">
+                <i class="fa-solid fa-plus"></i> <span style="margin-left:5px">Add New</span>
+            </button>
+        </div>
+
+        <div class="content-scroll">
+            
+            <!-- VIEW: DASHBOARD -->
+            <div id="view-dashboard" class="view-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);"><i class="fa-solid fa-film"></i></div>
+                        <div class="stat-info"><h3 id="count-movies">0</h3><p>Total Movies</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #ff9ff3 0%, #f368e0 100%);"><i class="fa-solid fa-tower-broadcast"></i></div>
+                        <div class="stat-info"><h3 id="count-channels">0</h3><p>Channels</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);"><i class="fa-solid fa-list"></i></div>
+                        <div class="stat-info"><h3 id="count-cats">0</h3><p>Categories</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);"><i class="fa-solid fa-bell"></i></div>
+                        <div class="stat-info"><h3 id="count-notifs">0</h3><p>Notifications</p></div>
+                    </div>
+                </div>
+                
+                <div style="background:white; padding:40px; border-radius:20px; text-align:center; margin-top:20px; box-shadow:var(--shadow-soft);">
+                    <i class="fa-solid fa-crown" style="font-size:3rem; background: var(--primary-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom:15px;"></i>
+                    <h3 style="color:var(--text-dark)">Welcome Admin</h3>
+                    <p style="color:var(--text-grey); font-size:0.9rem; margin-top:5px;">Manage your content for the Movie App Pro.</p>
+                </div>
+            </div>
+
+            <!-- VIEW: MOVIES -->
+            <div id="view-movies" class="view-section">
+                <div style="margin-bottom:20px; display:block;" class="mobile-search-wrapper">
+                    <input type="text" id="mobile-movie-search" placeholder="Search movies..." 
+                           style="width:100%; padding:12px; border-radius:12px; border:1px solid #ddd; outline:none;">
+                </div>
+                <div id="movies-container" class="grid">Loading...</div>
+            </div>
+
+            <!-- VIEW: CHANNELS -->
+            <div id="view-channels" class="view-section">
+                <div id="channels-container" class="grid">Loading...</div>
+            </div>
+
+            <!-- VIEW: CATEGORIES -->
+            <div id="view-categories" class="view-section">
+                <div id="categories-container">Loading...</div>
+            </div>
+
+            <!-- VIEW: NOTIFICATIONS -->
+            <div id="view-notifications" class="view-section">
+                <div id="notifications-container">Loading...</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- === MOVIE MODAL (UPDATED FOR POPULAR & STREAM) === -->
+    <div class="modal" id="movieModal">
+        <div class="modal-content">
+            <h3>Manage Movie</h3>
+            <form id="movieForm">
+                <input type="hidden" id="m-docId">
+                <div class="form-group"><label>Title</label><input type="text" id="m-title" class="form-control" required></div>
+                
+                <!-- Updated Label for clarity -->
+                <div class="form-group" style="background:#f0f8ff; padding:15px; border-radius:15px; border:1px dashed #0072ff;">
+                    <label style="color:#0072ff; font-weight:600;"><i class="fa-solid fa-link"></i> Stream URL (MP4/m3u8)</label>
+                    <input type="url" id="m-stream" class="form-control" placeholder="https://..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="m-genre" class="form-control" required><option value="">Loading...</option></select>
+                </div>
+                
+                <div style="display:flex; gap:10px;">
+                    <div class="form-group" style="flex:1"><label>Poster (Vertical)</label><input type="url" id="m-poster" class="form-control" required></div>
+                    <div class="form-group" style="flex:1"><label>Cover (Horizontal)</label><input type="url" id="m-cover" class="form-control" required></div>
+                </div>
+                
+                <div class="form-group"><label>Description</label><textarea id="m-desc" class="form-control" rows="3"></textarea></div>
+                
+                <!-- FLAGS: HERO, TRENDING, POPULAR -->
+                <div class="toggle-group">
+                    <label class="toggle-label"><input type="checkbox" id="m-hero"> Hero Banner</label>
+                    <label class="toggle-label"><input type="checkbox" id="m-trend"> Trending</label>
+                    <label class="toggle-label" style="color:#ff4757; font-weight:600;"><input type="checkbox" id="m-popular"> <i class="fa-solid fa-fire"></i> Popular</label>
+                </div>
+                <br>
+                <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Save Movie</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Channel Modal -->
+    <div class="modal" id="channelModal">
+        <div class="modal-content">
+            <h3>Manage Channel</h3>
+            <form id="channelForm">
+                <input type="hidden" id="c-docId">
+                <div class="form-group"><label>Channel Name</label><input type="text" id="c-name" class="form-control" required></div>
+                <div class="form-group"><label>Logo URL</label><input type="url" id="c-logo" class="form-control" required></div>
+                <div class="form-group"><label>Stream URL</label><input type="url" id="c-stream" class="form-control"></div>
+                <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Save Channel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <h3>Add Category</h3>
+            <form id="categoryForm">
+                <div class="form-group"><label>Category Name</label><input type="text" id="cat-name" class="form-control" placeholder="e.g., Action" required></div>
+                <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Add</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div class="modal" id="notificationModal">
+        <div class="modal-content">
+            <h3>Send Notification</h3>
+            <form id="notificationForm">
+                <div class="form-group"><label>Title</label><input type="text" id="notif-title" class="form-control" required></div>
+                <div class="form-group"><label>Message</label><textarea id="notif-msg" class="form-control" rows="3" required></textarea></div>
+                <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Send Now</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">
+        <i class="fa-solid fa-check-circle" style="color:#00c6ff"></i> <span>Action Successful</span>
+    </div>
+
+    <!-- FIREBASE LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // CONFIG (Replace with your actual keys if they changed)
+        const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_BUCKET.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID",
+    databaseURL: "https://YOUR_DB.firebaseio.com"
+  };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let currentView = 'dashboard';
+        let allMovies = []; 
+
+        // --- UI HELPER FUNCTIONS ---
+        window.toggleSidebar = () => {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        };
+
+        window.switchView = (view) => {
+            currentView = view;
+            
+            // UI Updates
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${view}`).classList.add('active');
+            
+            const map = {dashboard:0, movies:1, channels:2, categories:3, notifications:4};
+            if(map[view] !== undefined) document.querySelectorAll('.nav-link')[map[view]].classList.add('active');
+
+            document.getElementById('page-title').innerText = view.charAt(0).toUpperCase() + view.slice(1);
+            document.getElementById('add-btn').style.display = (view === 'dashboard') ? 'none' : 'flex';
+            
+            const isDesktop = window.innerWidth > 768;
+            document.getElementById('global-search').style.display = (view === 'movies' && isDesktop) ? 'flex' : 'none';
+
+            if(window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('active');
+                document.getElementById('sidebarOverlay').classList.remove('active');
+            }
+
+            if(view === 'dashboard') loadStats();
+            if(view === 'movies') loadMovies();
+            if(view === 'channels') loadChannels();
+            if(view === 'categories') loadCategories();
+            if(view === 'notifications') loadNotifications();
+        };
+
+        window.openModal = async (id=null, data=null) => {
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); // Close others
+
+            if(currentView === 'movies') {
+                await populateCategoryDropdown();
+                const f = document.getElementById('movieForm');
+                if(id && data) {
+                    document.getElementById('m-docId').value = id;
+                    document.getElementById('m-title').value = data.title;
+                    document.getElementById('m-stream').value = data.streamUrl || ''; // Match User App Field
+                    document.getElementById('m-genre').value = data.genre;
+                    document.getElementById('m-poster').value = data.posterUrl;
+                    document.getElementById('m-cover').value = data.coverUrl;
+                    document.getElementById('m-desc').value = data.description;
+                    document.getElementById('m-hero').checked = data.isHero;
+                    document.getElementById('m-trend').checked = data.isTrending;
+                    document.getElementById('m-popular').checked = data.isPopular || false; // NEW POPULAR FLAG
+                } else { 
+                    f.reset(); 
+                    document.getElementById('m-docId').value = ''; 
+                }
+                document.getElementById('movieModal').classList.add('active');
+            }
+            else if(currentView === 'channels') {
+                const f = document.getElementById('channelForm');
+                if(id && data) {
+                    document.getElementById('c-docId').value = id;
+                    document.getElementById('c-name').value = data.name;
+                    document.getElementById('c-logo').value = data.logoUrl;
+                    document.getElementById('c-stream').value = data.streamUrl;
+                } else { f.reset(); document.getElementById('c-docId').value = ''; }
+                document.getElementById('channelModal').classList.add('active');
+            }
+            else if(currentView === 'categories') {
+                document.getElementById('categoryForm').reset();
+                document.getElementById('categoryModal').classList.add('active');
+            }
+            else if(currentView === 'notifications') {
+                document.getElementById('notificationForm').reset();
+                document.getElementById('notificationModal').classList.add('active');
+            }
+        };
+
+        // Close modal on click outside content
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if(e.target === modal) modal.classList.remove('active');
+            });
+        });
+
+        function showToast(msg, type='success') {
+            const t = document.getElementById('toast');
+            t.className = `toast show ${type}`;
+            t.querySelector('span').innerText = msg;
+            t.querySelector('i').className = type === 'success' ? 'fa-solid fa-check-circle' : 'fa-solid fa-circle-exclamation';
+            if(type === 'error') t.querySelector('i').style.color = '#ff4757';
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        const handleSearch = (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allMovies.filter(m => m.data.title.toLowerCase().includes(term));
+            renderMoviesGrid(filtered);
+        };
+        document.getElementById('movie-search').addEventListener('keyup', handleSearch);
+        document.getElementById('mobile-movie-search').addEventListener('keyup', handleSearch);
+
+        // --- CORE FUNCTIONS ---
+        
+        async function loadStats() {
+            const m = await getDocs(collection(db, "movies"));
+            const c = await getDocs(collection(db, "channels"));
+            const cat = await getDocs(collection(db, "categories"));
+            const n = await getDocs(collection(db, "notifications"));
+            
+            document.getElementById('count-movies').innerText = m.size;
+            document.getElementById('count-channels').innerText = c.size;
+            document.getElementById('count-cats').innerText = cat.size;
+            document.getElementById('count-notifs').innerText = n.size;
+        }
+
+        // MOVIES LOAD
+        window.loadMovies = async () => {
+            const div = document.getElementById('movies-container');
+            div.innerHTML = '<p style="padding:10px">Loading...</p>';
+            try {
+                const q = await getDocs(collection(db, "movies"));
+                allMovies = []; 
+                q.forEach(doc => allMovies.push({id: doc.id, data: doc.data()}));
+                renderMoviesGrid(allMovies);
+            } catch(e) { console.error(e); }
+        };
+
+        function renderMoviesGrid(list) {
+            const div = document.getElementById('movies-container');
+            if(list.length === 0) { div.innerHTML = '<p style="padding:20px; color:#999">No movies found.</p>'; return; }
+            
+            let html = '';
+            list.forEach(item => {
+                const d = item.data;
+                const safeData = JSON.stringify(d).replace(/"/g, '&quot;');
+                
+                html += `
+                <div class="admin-card">
+                    <img src="${d.posterUrl}" onerror="this.src='https://via.placeholder.com/200?text=No+Image'">
+                    <div class="card-body">
+                        <h4>${d.title}</h4>
+                        <div class="card-badges">
+                            <span style="background:#f1f2f6; color:#636e72; padding:3px 8px; border-radius:10px; font-size:0.7rem">${d.genre}</span>
+                            ${d.isHero ? '<span class="badge badge-hero">Hero</span>' : ''}
+                            ${d.isTrending ? '<span class="badge badge-trend">Trend</span>' : ''}
+                            ${d.isPopular ? '<span class="badge badge-pop"><i class="fa-solid fa-fire"></i></span>' : ''}
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn edit-btn" onclick="openModal('${item.id}', ${safeData})"><i class="fa-solid fa-pen"></i></button>
+                            <button class="action-btn del-btn" onclick="deleteItem('movies', '${item.id}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            div.innerHTML = html;
+        }
+
+        // MOVIE SAVE (Updated Logic)
+        document.getElementById('movieForm').addEventListener('submit', async(e) => {
+            e.preventDefault();
+            const id = document.getElementById('m-docId').value;
+            const data = {
+                title: document.getElementById('m-title').value,
+                streamUrl: document.getElementById('m-stream').value, // Matches User App
+                genre: document.getElementById('m-genre').value,
+                posterUrl: document.getElementById('m-poster').value,
+                coverUrl: document.getElementById('m-cover').value,
+                description: document.getElementById('m-desc').value,
+                isHero: document.getElementById('m-hero').checked,
+                isTrending: document.getElementById('m-trend').checked,
+                isPopular: document.getElementById('m-popular').checked // NEW
+            };
+            await saveData('movies', id, data);
+        });
+
+        // CHANNELS LOAD
+        window.loadChannels = async () => {
+            const div = document.getElementById('channels-container');
+            div.innerHTML = 'Loading...';
+            try {
+                const q = await getDocs(collection(db, "channels"));
+                let html = '';
+                q.forEach(doc => {
+                    const d = doc.data();
+                    const safeData = JSON.stringify(d).replace(/"/g, '&quot;');
+                    html += `
+                    <div class="admin-card" style="text-align:center;">
+                        <div style="height:150px; display:flex; align-items:center; justify-content:center; background:#f9f9f9;">
+                            <img src="${d.logoUrl}" style="width:80px; height:80px; object-fit:contain; border-radius:50%; box-shadow:0 5px 15px rgba(0,0,0,0.1);">
+                        </div>
+                        <div class="card-body">
+                            <h4>${d.name}</h4>
+                            <div class="card-actions">
+                                <button class="action-btn edit-btn" onclick="openModal('${doc.id}', ${safeData})"><i class="fa-solid fa-pen"></i></button>
+                                <button class="action-btn del-btn" onclick="deleteItem('channels', '${doc.id}')"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                div.innerHTML = html || '<p style="padding:10px">No channels added.</p>';
+            } catch(e){}
+        };
+
+        document.getElementById('channelForm').addEventListener('submit', async(e) => {
+            e.preventDefault();
+            const id = document.getElementById('c-docId').value;
+            const data = {
+                name: document.getElementById('c-name').value,
+                logoUrl: document.getElementById('c-logo').value,
+                streamUrl: document.getElementById('c-stream').value
+            };
+            await saveData('channels', id, data);
+        });
+
+        // CATEGORIES
+        window.loadCategories = async () => {
+            const div = document.getElementById('categories-container');
+            div.innerHTML = 'Loading...';
+            try {
+                const q = await getDocs(collection(db, "categories"));
+                let html = '';
+                q.forEach(doc => {
+                    html += `
+                    <div class="list-row">
+                        <strong>${doc.data().name}</strong>
+                        <button class="action-btn del-btn" style="max-width:40px;" onclick="deleteItem('categories', '${doc.id}')"><i class="fa-solid fa-trash"></i></button>
+                    </div>`;
+                });
+                div.innerHTML = html || 'No categories.';
+            } catch(e){}
+        };
+
+        async function populateCategoryDropdown() {
+            const sel = document.getElementById('m-genre');
+            sel.innerHTML = '<option value="">Select Category</option>';
+            const q = await getDocs(collection(db, "categories"));
+            q.forEach(doc => {
+                const opt = document.createElement('option');
+                opt.value = doc.data().name;
+                opt.innerText = doc.data().name;
+                sel.appendChild(opt);
+            });
+        }
+
+        document.getElementById('categoryForm').addEventListener('submit', async(e)=>{
+            e.preventDefault();
+            await saveData('categories', null, {name: document.getElementById('cat-name').value});
+        });
+
+        // NOTIFICATIONS
+        window.loadNotifications = async () => {
+            const div = document.getElementById('notifications-container');
+            try {
+                const q = await getDocs(query(collection(db, "notifications"), orderBy("date", "desc")));
+                let html = '';
+                q.forEach(doc => {
+                    const d = doc.data();
+                    html += `
+                    <div class="list-row" style="display:block;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <h4 style="margin:0">${d.title}</h4>
+                            <button class="action-btn del-btn" style="max-width:30px; height:30px; padding:0" onclick="deleteItem('notifications', '${doc.id}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <p style="font-size:0.85rem; color:#666; margin-top:5px;">${d.message}</p>
+                        <small style="color:#999; font-size:0.75rem">${new Date(d.date).toLocaleDateString()}</small>
+                    </div>`;
+                });
+                div.innerHTML = html || 'No notifications.';
+            } catch(e){}
+        };
+
+        document.getElementById('notificationForm').addEventListener('submit', async(e)=>{
+            e.preventDefault();
+            await saveData('notifications', null, {
+                title: document.getElementById('notif-title').value,
+                message: document.getElementById('notif-msg').value,
+                date: new Date().toISOString()
+            });
+        });
+
+        // GLOBAL SAVE/DELETE
+        async function saveData(col, id, data) {
+            const btn = document.querySelector('.modal.active .btn-primary');
+            const originalText = btn.innerText;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+            
+            try {
+                if(id) await updateDoc(doc(db, col, id), data);
+                else await addDoc(collection(db, col), data);
+                
+                document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+                showToast("Saved Successfully!");
+                
+                // Reload
+                if(currentView === 'movies') loadMovies();
+                if(currentView === 'channels') loadChannels();
+                if(currentView === 'categories') loadCategories();
+                if(currentView === 'notifications') loadNotifications();
+
+            } catch(e) { console.error(e); showToast("Error saving data", "error"); }
+            finally { btn.innerText = originalText; }
+        }
+
+        window.deleteItem = async (col, id) => {
+            if(confirm("Delete this item permanently?")) {
+                try {
+                    await deleteDoc(doc(db, col, id));
+                    showToast("Deleted!");
+                    if(currentView === 'movies') loadMovies();
+                    if(currentView === 'channels') loadChannels();
+                    if(currentView === 'categories') loadCategories();
+                    if(currentView === 'notifications') loadNotifications();
+                } catch(e) { showToast("Error deleting", "error"); }
+            }
+        };
+
+        // Init
+        loadStats();
+
+    </script>
+</body>
+</html>
